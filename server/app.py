@@ -4,6 +4,7 @@ import ssl
 import socket
 import time  # ✅ Import time module for correct timestamp handling
 import re
+import pandas as pd
 
 # List of phishing-related words commonly found in malicious URLs
 SUSPICIOUS_WORDS = ["login", "verify", "update", "secure", "bank", "password", 
@@ -39,7 +40,7 @@ def extract_features(url):
         # Count phishing-related words in URL
         suspicious_words_count = sum(word in url.lower() for word in SUSPICIOUS_WORDS)
 
-        return [has_https, url_length, num_digits, num_special_chars, suspicious_words_count, 0]
+        return [0,has_https, url_length, num_digits, num_special_chars, suspicious_words_count]
 
     except Exception as e:
         print(f"URL Parsing Error: {e}")
@@ -89,17 +90,28 @@ app = Flask(__name__)
 # Load trained phishing detection model
 model = joblib.load("ml_model/phishing_model.pkl")
 
+# Define feature names (must match model training)
+feature_columns = ["URL", "has_https", "url_length", "num_digits", "num_special_chars", "suspicious_words"]
+
 @app.route("/check_url", methods=["POST"])
 def check_url():
     data = request.get_json()
+    print(data)
+
     url = data["url"]
 
     # Extract URL features
     url_features = extract_features(url)
+    print(url_features)
+
     ssl_valid = validate_ssl(url)
 
-    # Predict phishing risk
-    prediction = model.predict([url_features])[0]
+    # Convert extracted features to a Pandas DataFrame
+    X_input = pd.DataFrame([url_features], columns=feature_columns)
+
+    # Make prediction
+    prediction = model.predict(X_input)[0]
+    print(prediction)
 
     return jsonify({
         "url": url,

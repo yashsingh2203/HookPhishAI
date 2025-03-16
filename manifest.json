@@ -5,6 +5,7 @@
   "description": "AI-powered phishing detection Chrome extension.",
   
   "permissions": [
+    "tabs",
     "activeTab",
     "storage",
     "webRequest",

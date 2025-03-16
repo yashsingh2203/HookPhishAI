@@ -25,7 +25,7 @@ if (chrome.webNavigation) {
 
     try {
       // Send the URL to your phishing detection server
-      let response = await fetch("http://localhost:5000/check_url", {
+      let response = await fetch("http://localhost:5900/check_url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: details.url })
@@ -70,6 +70,12 @@ if (chrome.webNavigation) {
     if (changeInfo.status === "complete") {  // Ensure page is fully loaded
         console.log("🔍 URL detected:", tab.url);
 
+        // Ignore error pages (Chrome's internal error pages)
+        if (tab.url == undefined || tab.url.startsWith("chrome-error://" || tab.url.startsWith("chrome-extension://")  || tab.url.startsWith("devtools://"))) {
+          console.warn("⚠️ Ignoring error page:", tab.url);
+          return;
+        }
+
         try {
             let response = await fetch("http://localhost:5000/check_url", {
                 method: "POST",
@@ -107,7 +113,7 @@ if (chrome.webNavigation) {
                 chrome.windows.create({
                     url: "popup.html",
                     type: "popup",
-                    width: 400,
+                    width: 500,
                     height: 500
                 });
             }
